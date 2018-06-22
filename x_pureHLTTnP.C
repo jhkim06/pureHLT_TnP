@@ -1,5 +1,5 @@
 .L RooCMSShape.cc+
 
-.L pureHLTTnP.C+
+.L pureHLTTnP_eta.C+
 pureHLTTnP()
 

@@ -149,31 +149,31 @@ void pureHLTTnP()
  TTree *tree=0;
  tree = (TTree*)infile1->Get("hltTPTree");
 
- double etBins[] = {0., 20., 30., 60., 100., 500.};  
- const int NetBins = sizeof(etBins)/sizeof(double); 
+ double etaBins[] = {-2.5,-2.2,-1.566,-1.4442, -1.0, -0.6,-0.3,-0.1, 0.1, 0.3,0.6,1.0, 1.4442, 1.566, 2.2, 2.5};  
+ const int NetaBins = sizeof(etaBins)/sizeof(double); 
 
  vector<TString> etbinNames;
- for( int i = 0; i < NetBins-1; i++){
+ for( int i = 0; i < NetaBins-1; i++){
       TString lowerBound, upperBound;
-      lowerBound.Form("%f", etBins[i]);
-      upperBound.Form("%f", etBins[i+1]);
-      etbinNames.push_back("et"+lowerBound+"et"+upperBound);
-      cout << "check bin names: " << "et"+lowerBound+"et"+upperBound <<  endl;
+      lowerBound.Form("%f", etaBins[i]);
+      upperBound.Form("%f", etaBins[i+1]);
+      etbinNames.push_back("eta"+lowerBound+"eta"+upperBound);
+      cout << "check bin names: " << "eta"+lowerBound+"eta"+upperBound <<  endl;
  }
 
- TH1D* htotalSig = new TH1D("htotalSig","htotalSig", NetBins-1, etBins);
- TH1D* hPtotalSig = new TH1D("hPtotalSig","hPtotalSig", NetBins-1, etBins);
+ TH1D* htotalSig = new TH1D("htotalSig","htotalSig", NetaBins-1, etaBins);
+ TH1D* hPtotalSig = new TH1D("hPtotalSig","hPtotalSig", NetaBins-1, etaBins);
 
 
- for( int ibin = 0; ibin < NetBins-1; ibin++){
+ for( int ibin = 0; ibin < NetaBins-1; ibin++){
 
  TString lowerBound, upperBound;
- lowerBound.Form("%f", etBins[ibin]);
- upperBound.Form("%f", etBins[ibin+1]);
+ lowerBound.Form("%f", etaBins[ibin]);
+ upperBound.Form("%f", etaBins[ibin+1]);
 
  // for pixel matching filter
  TString var = "mass";
- TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.et > " + lowerBound + "&& probeHLT.et < " + upperBound + "&& probeHLTRegion==0 && (evtTrigs[0]&0x4000000)!=0 && (tagTrigs[2]&0x400000)!=0 &&  (probeTrigs[2]&0x8000)!=0";
+ TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.eta > " + lowerBound + "&& probeHLT.eta < " + upperBound + " && probeHLT.et > 30 && (evtTrigs[0]&0x4000000)!=0 && (tagTrigs[2]&0x400000)!=0 &&  (probeTrigs[2]&0x8000)!=0";
  cout << sampleCuts << endl;
  TString passingProbe = "(probeTrigs[2]&0x10000)!=0"; // pixel matching filter bit
  TString failingProbe = "(probeTrigs[2]&0x10000)==0"; // pixel matching filter bit
@@ -397,6 +397,6 @@ void pureHLTTnP()
  eff->SetLineColor(kRed);
  eff->Draw("ape");
 
- c1->SaveAs("eff.png");
+ c1->SaveAs("eff_eta.png");
 
 }
