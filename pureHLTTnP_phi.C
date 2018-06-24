@@ -1,15 +1,15 @@
 //root -b -q 'draw_effS.C()'
 
-#include <TROOT.h>                        // access to gROOT, entry point to ROOT system
-#include <TSystem.h>                      // interface to OS
-#include <TFile.h>                        // file handle class
-#include <TTree.h>                        // class to access ntuples
-#include <TBenchmark.h>                   // class to track macro running statistics
-#include <TH1D.h>                         // histogram class
-#include <vector>                         // STL vector class
-#include <iomanip>                        // functions to format standard I/O
-#include <string>                         // C++ string class
-#include <sstream>                        // class for parsing strings
+#include <TROOT.h>                    // access to gROOT, entry point to ROOT system
+#include <TSystem.h>                  // interface to OS
+#include <TFile.h>                    // file handle class
+#include <TTree.h>                    // class to access ntuples
+#include <TBenchmark.h>               // class to track macro running statistics
+#include <TH1D.h>                     // histogram class
+#include <vector>                     // STL vector class
+#include <iomanip>                    // functions to format standard I/O
+#include <string>                     // C++ string class
+#include <sstream>                    // class for parsing strings
 #include <TRandom3.h>
 #include <TGaxis.h>
 #include "TLorentzVector.h"           // 4-vector class
@@ -146,7 +146,7 @@ void pureHLTTnP()
  TFile* infile1 = NULL;
  //TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/CMSSW_10_1_5/ntuple/ntuple_CMSSW_10_1_5_BadPixModuleFix.root";
  //TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/CMSSW_10_1_2_patch2/ntuple/ntuple_CMSSW_10_1_2_patch.root";
- TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/TnPsamples/2018Bv1/2018Bv1.root";
+ TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/TnPsamples/2018Av3/2018Av3.root";
  infile1 = new TFile(filename1);
 
  TTree *tree=0;
@@ -167,232 +167,232 @@ void pureHLTTnP()
  TH1D* htotalSig = new TH1D("htotalSig","htotalSig", NphiBins-1, phiBins);
  TH1D* hPtotalSig = new TH1D("hPtotalSig","hPtotalSig", NphiBins-1, phiBins);
 
-
  for( int ibin = 0; ibin < NphiBins-1; ibin++){
 
- //if(ibin != 1) continue;
- TString lowerBound, upperBound;
- lowerBound.Form("%f", phiBins[ibin]);
- upperBound.Form("%f", phiBins[ibin+1]);
+    //if(ibin != 1) continue;
+    TString lowerBound, upperBound;
+    lowerBound.Form("%f", phiBins[ibin]);
+    upperBound.Form("%f", phiBins[ibin+1]);
 
- // for pixel matching filter
- TString var = "mass";
- //TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.eta > 0 && probeHLTRegion==1 && probeHLT.et > 30 && (evtTrigs[0]&0x4000000)!=0 && (tagTrigs[2]&0x400000)!=0 &&  (probeTrigs[2]&0x8000)!=0";
- TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.eta > 0 && probeHLTRegion==1 && probeHLT.et > 50  && (tagTrigs[2]&0x800)!=0 &&  (probeTrigs[2]&0x10)!=0";
- cout << sampleCuts << endl;
- //TString passingProbe = "(probeTrigs[2]&0x10000)!=0"; // pixel matching filter bit
- //TString failingProbe = "(probeTrigs[2]&0x10000)==0"; // pixel matching filter bit
+    // for pixel matching filter
+    TString var = "mass";
+    //TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.eta > 0 && probeHLTRegion==1 && probeHLT.et > 30 && (evtTrigs[0]&0x4000000)!=0 && (tagTrigs[2]&0x400000)!=0 &&  (probeTrigs[2]&0x8000)!=0";
+    TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.et > 50  && (tagTrigs[2]&0x800)!=0 &&  (probeTrigs[2]&0x10)!=0";
+    cout << sampleCuts << endl;
+    //TString passingProbe = "(probeTrigs[2]&0x10000)!=0"; // pixel matching filter bit
+    //TString failingProbe = "(probeTrigs[2]&0x10000)==0"; // pixel matching filter bit
 
- TString passingProbe = "(probeTrigs[2]&0x20)!=0"; // pixel matching filter bit
- TString failingProbe = "(probeTrigs[2]&0x20)==0"; // pixel matching filter bit
+    TString passingProbe = "(probeTrigs[2]&0x20)!=0"; // pixel matching filter bit
+    TString failingProbe = "(probeTrigs[2]&0x20)==0"; // pixel matching filter bit
 
- TH1* passHist;
- TH1* failHist;
-   
- //passHist = MakePassHist(tree, "Run 315322, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, passingProbe); 
- //failHist = MakePassHist(tree, "Run 315322, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, failingProbe); 
+    TH1* passHist;
+    TH1* failHist;
+      
+    //passHist = MakePassHist(tree, "Run 315322, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, passingProbe); 
+    //failHist = MakePassHist(tree, "Run 315322, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, failingProbe); 
 
- passHist = MakePassHist(tree, "2018 RunBv1, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, passingProbe); 
- failHist = MakePassHist(tree, "2018 RunBv1, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, failingProbe); 
+    passHist = MakePassHist(tree, "2018 RunBv1, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, passingProbe); 
+    failHist = MakePassHist(tree, "2018 RunBv1, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, failingProbe); 
 
- double nToP = passHist->Integral();
- cout << "nToP: " << nToP << endl;
- double nToF = failHist->Integral();
+    // Set up Extended binned Maximum likelihood fit
 
- RooRealVar massP("massP","m_{ee} [GeV]", 60., 120.);
- RooRealVar massF("massF","m_{ee} [GeV]", 60., 120.);
- //RooDataHist dsDataP("dsDataP","dsDataP",RooArgSet(massP),Import(*passHist));
- //RooDataHist dsDataF("dsDataF","dsDataF",RooArgSet(massF),Import(*failHist));
+    // total number of probes in the histogram
+    double nToP = passHist->Integral();
+    double nToF = failHist->Integral();
 
- RooDataHist dsDataP("dsDataP","dsDataP",massP,passHist);
- RooDataHist dsDataF("dsDataF","dsDataF",massF,failHist);
+    RooRealVar massP("massP","m_{ee} [GeV]", 60., 120.);
+    RooRealVar massF("massF","m_{ee} [GeV]", 60., 120.);
 
- RooPlot* frameP = massP.frame(Name("passing"), Title("passing")) ;
- RooPlot* frameF = massF.frame(Name("failing"), Title("failing")) ;
- frameP->SetMaximum(1.2*passHist->GetMaximum());
- frameF->SetMaximum(1.2*failHist->GetMaximum());
- dsDataP.plotOn(frameP, MarkerColor(kBlack), MarkerStyle(21), XErrorSize(0), MarkerSize(1.2)) ;
- dsDataF.plotOn(frameF, MarkerColor(kBlack), MarkerStyle(21), XErrorSize(0), MarkerSize(1.2)) ;
+    RooDataHist dsDataP("dsDataP","dsDataP",massP,passHist);
+    RooDataHist dsDataF("dsDataF","dsDataF",massF,failHist);
 
- // Crystal ball function
- RooRealVar cbMeanDataP("cbMeanDataP","cbMean", -1., -4., 4.);
- RooRealVar cbSigmaDataP("cbSigmaDataP","cbSigma", 2., 0.5, 4.);
- RooRealVar cbAlphaDataP("cbAlphaDataP","cbAlpha", 1., 0.1, 50);
- RooRealVar cbNDataP("cbNDataP","cbN", 2., 0.2, 50);
+    RooPlot* frameP = massP.frame(Name("passing"), Title("passing")) ;
+    RooPlot* frameF = massF.frame(Name("failing"), Title("failing")) ;
+    frameP->SetMaximum(1.2*passHist->GetMaximum());
+    frameF->SetMaximum(1.2*failHist->GetMaximum());
 
- RooRealVar cbMeanDataF("cbMeanDataF","cbMean", -1., -4., 4.);
- RooRealVar cbSigmaDataF("cbSigmaDataF","cbSigma", 2., 0.5, 4.);
- RooRealVar cbAlphaDataF("cbAlphaDataF","cbAlpha", 1., 0.1, 50);
- RooRealVar cbNDataF("cbNDataF","cbN", 2., 0.2, 50);
+    // plot histograms on frames
+    dsDataP.plotOn(frameP, Name("dsDataP"), MarkerColor(kBlack), MarkerStyle(21), MarkerSize(1.2)) ;
+    dsDataF.plotOn(frameF, Name("dsDataF"), MarkerColor(kBlack), MarkerStyle(21), MarkerSize(1.2)) ;
 
- // BreitWigner 
- RooRealVar meanP("meanP","meanP",91.2);
- RooRealVar sigmaP("sigmaP","sigmaP",2.5);
+    // Crystal ball function
+    RooRealVar cbMeanDataP("cbMeanDataP","cbMean", -2., -4., 4.);
+    RooRealVar cbSigmaDataP("cbSigmaDataP","cbSigma", 2., 0.5, 4.);
+    RooRealVar cbAlphaDataP("cbAlphaDataP","cbAlpha", 20., 0.1, 50);
+    RooRealVar cbNDataP("cbNDataP","cbN", 30., 0.2, 50);
 
- RooRealVar meanF("meanF","meanF",91.2);
- RooRealVar sigmaF("sigmaF","sigmaF",2.5);
+    RooRealVar cbMeanDataF("cbMeanDataF","cbMean", -1., -4., 4.);
+    RooRealVar cbSigmaDataF("cbSigmaDataF","cbSigma", 2., 0.5, 4.);
+    RooRealVar cbAlphaDataF("cbAlphaDataF","cbAlpha", 1., 0.1, 50);
+    RooRealVar cbNDataF("cbNDataF","cbN", 2., 0.2, 50);
 
- // RooCMSShape
- //RooRealVar alphacmsP("alphacmsP","alphacmsP", 60., 50., 80.);
- //RooRealVar betacmsP("betacmsP","betacmsP", 0.05,0.01,0.2);
- //RooRealVar gammacmsP("gammacmsP","gammacmsP", 0.1, 0, 1);
- //RooRealVar peakcmsP("peakcmsP","peakcmsP", 90.0);
+    // BreitWigner 
+    RooRealVar meanP("meanP","meanP",91.2);
+    RooRealVar sigmaP("sigmaP","sigmaP",2.5);
 
- // values from egm_tnp_analysis
- RooRealVar alphacmsP("alphacmsP","alphacmsP", 60., 50., 80.);
- RooRealVar betacmsP("betacmsP","betacmsP", 0.05,0.01,0.08);
- RooRealVar gammacmsP("gammacmsP","gammacmsP", 0.1, -2., 2.);
- RooRealVar peakcmsP("peakcmsP","peakcmsP", 90.0);
+    RooRealVar meanF("meanF","meanF",91.2);
+    RooRealVar sigmaF("sigmaF","sigmaF",2.5);
 
- RooRealVar alphacmsF("alphacmsF","alphacmsF", 60., 50., 80.);
- RooRealVar betacmsF("betacmsF","betacmsF", 0.05,0.01,0.2);
- RooRealVar gammacmsF("gammacmsF","gammacmsF", 0.1, 0, 1);
- RooRealVar peakcmsF("peakcmsF","peakcmsF", 90.0);
+    // RooCMSShape
+    //RooRealVar alphacmsP("alphacmsP","alphacmsP", 60., 50., 80.);
+    //RooRealVar betacmsP("betacmsP","betacmsP", 0.05,0.01,0.2);
+    //RooRealVar gammacmsP("gammacmsP","gammacmsP", 0.1, 0, 1);
+    //RooRealVar peakcmsP("peakcmsP","peakcmsP", 90.0);
 
- //RooRealVar alphacmsF("alphacmsF","alphacmsF", 80., 50., 120.);
- //RooRealVar betacmsF("betacmsF","betacmsF", 0.05,0.01,0.2);
- //RooRealVar gammacmsF("gammacmsF","gammacmsF", 0.1, -2., 2.);
- //RooRealVar peakcmsF("peakcmsF","peakcmsF", 90.0);
+    // values from egm_tnp_analysis
+    RooRealVar alphacmsP("alphacmsP","alphacmsP", 90., 50., 100.);
+    RooRealVar betacmsP("betacmsP","betacmsP", 0.05,0.01,0.5);
+    RooRealVar gammacmsP("gammacmsP","gammacmsP", 0.1, 0., 1.);
+    RooRealVar peakcmsP("peakcmsP","peakcmsP", 90.0, 85., 95.);
 
- RooRealVar nsigP("nsigP","signal events1", nToP*0.9,0.,nToP); // https://github.com/michelif/egm_tnp_analysis/blob/egm_tnp_Moriond18_v3.0/libCpp/histFitter.C#L121
- RooRealVar nbkgP("nbkgP","signal background events1",nToP*0.1,0.,nToP);
+    RooRealVar alphacmsF("alphacmsF","alphacmsF", 60., 50., 80.);
+    RooRealVar betacmsF("betacmsF","betacmsF", 0.05,0.01,0.2);
+    RooRealVar gammacmsF("gammacmsF","gammacmsF", 0.1, 0, 1);
+    RooRealVar peakcmsF("peakcmsF","peakcmsF", 90.0);
 
- RooRealVar nsigF("nsigF","signal events1",nToF*0.9,0.,nToF);
- RooRealVar nbkgF("nbkgF","signal background events1",nToF*0.1,0.,nToF);
+    //RooRealVar alphacmsF("alphacmsF","alphacmsF", 80., 50., 120.);
+    //RooRealVar betacmsF("betacmsF","betacmsF", 0.05,0.01,0.2);
+    //RooRealVar gammacmsF("gammacmsF","gammacmsF", 0.1, -2., 2.);
+    //RooRealVar peakcmsF("peakcmsF","peakcmsF", 90.0);
 
- RooBreitWigner bwP("bwP","bwP", massP, meanP, sigmaP);
- RooCBShape cbDataP("cbDataP","cb", massP, cbMeanDataP, cbSigmaDataP, cbAlphaDataP, cbNDataP);
- RooFFTConvPdf BWxCBDataP("BWxCBDataP", "BW (x) CB", massP, bwP, cbDataP);
- RooCMSShape bgP("bgP", "bgP", massP, alphacmsP, betacmsP, gammacmsP, peakcmsP);
+    RooRealVar nsigP("nsigP","signal events1", nToP*0.99,0.,nToP); // https://github.com/michelif/egm_tnp_analysis/blob/egm_tnp_Moriond18_v3.0/libCpp/histFitter.C#L121
+    RooRealVar nbkgP("nbkgP","signal background events1",nToP*0.01,0.,nToP);
 
- // use RooExtendPdf
- massP.setRange("signal",81,101) ;
- RooExtendPdf eBWxCBDataP("esigP", "esigP", BWxCBDataP, nsigP, "signal");
- RooExtendPdf ebgP("ebkgP", "ebkgP", bgP, nbkgP,"signal");
+    RooRealVar nsigF("nsigF","signal events1",nToF*0.9,0.,nToF);
+    RooRealVar nbkgF("nbkgF","signal background events1",nToF*0.1,0.,nToF);
 
- RooBreitWigner bwF("bwF","bwF", massF, meanF, sigmaF);
- RooCBShape cbDataF("cbDataF","cb", massF, cbMeanDataF, cbSigmaDataF, cbAlphaDataF, cbNDataF);
- RooFFTConvPdf BWxCBDataF("BWxCBDataF", "BW (x) CB", massF, bwF, cbDataF);
- RooCMSShape bgF("bgF", "bgF", massF, alphacmsF, betacmsF, gammacmsF, peakcmsF);
+    // create passing pdfs
+    RooBreitWigner bwP("bwP","bwP", massP, meanP, sigmaP);
+    RooCBShape cbDataP("cbDataP","cb", massP, cbMeanDataP, cbSigmaDataP, cbAlphaDataP, cbNDataP);
+    RooFFTConvPdf BWxCBDataP("BWxCBDataP", "BW (x) CB", massP, bwP, cbDataP);
+    RooCMSShape bgP("bgP", "bgP", massP, alphacmsP, betacmsP, gammacmsP, peakcmsP);
 
- massF.setRange("signal",81,101) ;
- RooExtendPdf eBWxCBDataF("esigF", "esigF", BWxCBDataF, nsigF, "signal");
- RooExtendPdf ebgF("ebkgF", "ebkgF", bgF, nbkgF,"signal");
+    // use RooExtendPdf
+    massP.setRange("signal",81,101) ;
+    RooExtendPdf eBWxCBDataP("esigP", "esigP", BWxCBDataP, nsigP, "signal");
+    RooExtendPdf ebgP("ebkgP", "ebkgP", bgP, nbkgP,"signal");
 
- //RooAddPdf dataModelP("dataModelP","dataModelP",RooArgList(BWxCBDataP,bgP), RooArgList(nsigP,nbkgP)) ;
- RooAddPdf dataModelP("dataModelP","dataModelP",RooArgList(eBWxCBDataP,ebgP)) ;
- //RooAddPdf dataModelF("dataModelF","dataModelF",RooArgList(BWxCBDataF,bgF), RooArgList(nsigF,nbkgF)) ;
- RooAddPdf dataModelF("dataModelF","dataModelF",RooArgList(eBWxCBDataF,ebgF)) ;
+    // create failing pdfs
+    RooBreitWigner bwF("bwF","bwF", massF, meanF, sigmaF);
+    RooCBShape cbDataF("cbDataF","cb", massF, cbMeanDataF, cbSigmaDataF, cbAlphaDataF, cbNDataF);
+    RooFFTConvPdf BWxCBDataF("BWxCBDataF", "BW (x) CB", massF, bwF, cbDataF);
+    RooCMSShape bgF("bgF", "bgF", massF, alphacmsF, betacmsF, gammacmsF, peakcmsF);
 
+    // use RooExtendPdf
+    massF.setRange("signal",81,101) ;
+    RooExtendPdf eBWxCBDataF("esigF", "esigF", BWxCBDataF, nsigF, "signal");
+    RooExtendPdf ebgF("ebkgF", "ebkgF", bgF, nbkgF,"signal");
 
- // fit passing probes
- //RooFitResult* dataFitP = dataModelP.fitTo(dsDataP,Save(),Extended(), SumW2Error(kTRUE)) ;
- RooFitResult* dataFitP = dataModelP.fitTo(dsDataP,Save(),Extended()) ;
- dataModelP.plotOn(frameP,LineColor(kBlack)) ;
- dataModelP.plotOn(frameP,Components(BWxCBDataP) ,LineColor(kRed), LineStyle(kDashed)) ;
- dataModelP.plotOn(frameP,Components(bgP) ,LineColor(kBlue), LineStyle(kDashed)) ;
+    RooAddPdf dataModelP("dataModelP","dataModelP",RooArgList(eBWxCBDataP,ebgP)) ;
+    RooAddPdf dataModelF("dataModelF","dataModelF",RooArgList(eBWxCBDataF,ebgF)) ;
 
- // fit failing probes
- //RooFitResult* dataFitF = dataModelF.fitTo(dsDataF,Save(),Extended(), SumW2Error(kTRUE)) ;
- RooFitResult* dataFitF = dataModelF.fitTo(dsDataF,Save(),Extended()) ;
- dataModelF.plotOn(frameF,LineColor(kRed)) ;
- dataModelF.plotOn(frameF,Components(BWxCBDataF) ,LineColor(kBlue)) ;
- dataModelF.plotOn(frameF,Components(bgF) ,LineColor(kCyan)) ;
+    // fit passing probes
+    //RooFitResult* dataFitP = dataModelP.fitTo(dsDataP,Save(),Extended(), SumW2Error(kTRUE)) ;
+    RooFitResult* dataFitP = dataModelP.fitTo(dsDataP,Save(),Extended()) ;
+    dataModelP.plotOn(frameP,Name("dataModelP"), LineColor(kBlack)) ;
+    dataModelP.plotOn(frameP,Components(BWxCBDataP) ,LineColor(kRed), LineStyle(kDashed)) ;
+    dataModelP.plotOn(frameP,Components(bgP) ,LineColor(kBlue), LineStyle(kDashed)) ;
 
- // FIXME: which this chi2 returen -1?
- Double_t chi2P = frameP->chiSquare("dataModelP", "dsDataP", 9);
- Double_t chi2F = frameP->chiSquare("dataModelF", "dsDataF", 9);
- std::cout<<"Chi Square=:"<<chi2P<<std::endl;
- std::cout<<"Chi Square=:"<<chi2F<<std::endl;
+    // fit failing probes
+    //RooFitResult* dataFitF = dataModelF.fitTo(dsDataF,Save(),Extended(), SumW2Error(kTRUE)) ;
+    RooFitResult* dataFitF = dataModelF.fitTo(dsDataF,Save(),Extended()) ;
+    dataModelF.plotOn(frameF,Name("dataModelF"),LineColor(kBlack)) ;
+    dataModelF.plotOn(frameF,Components(BWxCBDataF) ,LineColor(kRed), LineStyle(kDashed)) ;
+    dataModelF.plotOn(frameF,Components(bgF) ,LineColor(kBlue), LineStyle(kDashed)) ;
 
- cout << "nsig: " << nsigP.getVal() << " error: " << nsigP.getError()<< endl;
- cout << "nsig: " << nsigF.getVal() << " error: " << nsigF.getError()<< endl;
+    Double_t chi2P = frameP->chiSquare("dataModelP", "dsDataP", 10);
+    Double_t chi2F = frameF->chiSquare("dataModelF", "dsDataF", 10);
+    std::cout<<"Chi Square=:"<<chi2P<<std::endl;
+    std::cout<<"Chi Square=:"<<chi2F<<std::endl;
 
- //massP.setRange("signal",81,101) ;
- //RooAbsReal* fracSigP = BWxCBDataP.createIntegral(massP, massP, "signal") ;
- //Double_t nsig_fracP  = nsigP.getVal() * fracSigP->getVal();
- //massP.setRange("background",81,101) ;
- //RooAbsReal* fracBkgP = bgP.createIntegral(massP, massP, "background") ;
- //Double_t nbkg_fracP  = nbkgP.getVal() * fracBkgP->getVal();
+    cout << "Passing nsig: " << nsigP.getVal() << " error: " << nsigP.getError()<< endl;
+    cout << "Failing nsig: " << nsigF.getVal() << " error: " << nsigF.getError()<< endl;
 
- //cout<< "Pass Signal = " << nsig_fracP << " nsigP: " << nsigP.getVal() << " nsigP error: " << nsigP.getError() << endl;
- //cout<< "Pass BKGD = " << nbkg_fracP  << " nbkgP: " << nbkgP.getVal() << endl;
+    dataFitP->Print();
 
- //massF.setRange("signal",81,101) ;
- //RooAbsReal* fracSigF = BWxCBDataF.createIntegral(massF, massF, "signal") ;
- //Double_t nsig_fracF  = nsigF.getVal() * fracSigF->getVal();
- //massF.setRange("background",80,101) ;
- //RooAbsReal* fracBkgF = bgF.createIntegral(massF, massF, "background") ;
- //Double_t nbkg_fracF  = nbkgF.getVal() * fracBkgF->getVal();
+    // fill total signal and passing signal histograms 
+    htotalSig->SetBinContent(ibin+1, nsigP.getVal()+nsigF.getVal());
+    htotalSig->SetBinError(ibin+1, nsigP.getError()+nsigF.getError());
+    hPtotalSig->SetBinContent(ibin+1, nsigP.getVal());
+    hPtotalSig->SetBinError(ibin+1, nsigP.getError());
 
- //cout<< "Fail Signal = " << nsig_fracF << endl;
- //cout<< "Fail BKGD = " << nbkg_fracF << endl;
+    TCanvas *c1 = new TCanvas("c1","c1",2000,900);
+    c1->Divide(2,1,0.001,0.001);
+    gStyle->SetOptStat(0);
 
- // fill total signal and passing signal histograms 
- htotalSig->SetBinContent(ibin+1, nsigP.getVal()+nsigF.getVal());
- htotalSig->SetBinError(ibin+1, nsigP.getError()+nsigF.getError());
- hPtotalSig->SetBinContent(ibin+1, nsigP.getVal());
- hPtotalSig->SetBinError(ibin+1, nsigP.getError());
+    float yTitleOffset = 1.0;
+    float yTitleSize = 0.05;
+    float yLabelSize = 0.05;
+    float xTitleOffset = 1.;
+    float xTitleSize = 0.05;
+    float xLabelSize = 0.05;
 
- TCanvas *c1 = new TCanvas("c1","c1",2000,900);
- c1->Divide(2,1,0.001,0.001);
- gStyle->SetOptStat(0);
+    c1->cd(1);
+    gPad->SetTicky(1);
+    gPad->SetTickx(1);
+    gPad->SetBottomMargin(0.12);
+    gPad->SetRightMargin(0.05);
+    frameP->GetYaxis()->SetTitleOffset(yTitleOffset);
+    frameP->GetYaxis()->SetTitleSize(yTitleSize);
+    frameP->GetYaxis()->SetLabelSize(yLabelSize);
+    frameP->GetYaxis()->SetDecimals(2);
+    frameP->GetXaxis()->SetTitleOffset(xTitleOffset);
+    frameP->GetXaxis()->SetLabelSize(xLabelSize);
+    frameP->GetXaxis()->SetTitleSize(xTitleSize);
+    frameP->SetMarkerStyle(20);
+    //passHist->SetMinimum(0.5);
+    //passHist->SetMaximum(1.01);
+    frameP->SetMarkerColor(kRed);
+    frameP->SetLineColor(kRed);
+    frameP->Draw("pe");
 
- float yTitleOffset = 1.0;
- float yTitleSize = 0.05;
- float yLabelSize = 0.05;
- float xTitleOffset = 1.;
- float xTitleSize = 0.05;
- float xLabelSize = 0.05;
+    TLatex passFitInfo;
+    passFitInfo.SetNDC();                                                                                  
+    passFitInfo.SetTextFont(42);                                                                           
+    passFitInfo.SetTextSize(0.03);  
+    
+    TString chiPass;                                                                                     
+    chiPass.Form("chi^{2}/NDF = %.3f", chi2P);  
+    passFitInfo.DrawLatex(0.65,0.85, chiPass);
 
- c1->cd(1);
- gPad->SetTicky(1);
- gPad->SetTickx(1);
- gPad->SetBottomMargin(0.12);
- gPad->SetRightMargin(0.05);
- frameP->GetYaxis()->SetTitleOffset(yTitleOffset);
- frameP->GetYaxis()->SetTitleSize(yTitleSize);
- frameP->GetYaxis()->SetLabelSize(yLabelSize);
- frameP->GetYaxis()->SetDecimals(2);
- frameP->GetXaxis()->SetTitleOffset(xTitleOffset);
- frameP->GetXaxis()->SetLabelSize(xLabelSize);
- frameP->GetXaxis()->SetTitleSize(xTitleSize);
- frameP->SetMarkerStyle(20);
- //passHist->SetMinimum(0.5);
- //passHist->SetMaximum(1.01);
- frameP->SetMarkerColor(kRed);
- frameP->SetLineColor(kRed);
- frameP->Draw("pe");
+    TLegend* leg = new TLegend(0.25, 0.20, 0.5, 0.4,"","brNDC");
+    leg->SetTextSize(0.05);
+    leg->AddEntry(passHist, "PM filter, +EE", "pl");
+    leg->SetBorderSize(0);
+    //leg->Draw();
 
- TLegend* leg = new TLegend(0.25, 0.20, 0.5, 0.4,"","brNDC");
- leg->SetTextSize(0.05);
- leg->AddEntry(passHist, "PM filter, +EE", "pl");
- leg->SetBorderSize(0);
- //leg->Draw();
+    c1->cd(2);
+    gPad->SetTicky(1);
+    gPad->SetTickx(1);
+    gPad->SetBottomMargin(0.12);
+    gPad->SetRightMargin(0.05);
+    frameF->GetYaxis()->SetTitleOffset(yTitleOffset);
+    frameF->GetYaxis()->SetTitleSize(yTitleSize);
+    frameF->GetYaxis()->SetLabelSize(yLabelSize);
+    frameF->GetYaxis()->SetDecimals(2);
+    frameF->GetXaxis()->SetTitleOffset(xTitleOffset);
+    frameF->GetXaxis()->SetLabelSize(xLabelSize);
+    frameF->GetXaxis()->SetTitleSize(xTitleSize);
+    frameF->SetMarkerStyle(20);
+    //passHist->SetMinimum(0.5);
+    //passHist->SetMaximum(1.01);
+    frameF->SetMarkerColor(kRed);
+    frameF->SetLineColor(kRed);
+    frameF->Draw("pe");
 
- c1->cd(2);
- gPad->SetTicky(1);
- gPad->SetTickx(1);
- gPad->SetBottomMargin(0.12);
- gPad->SetRightMargin(0.05);
- frameF->GetYaxis()->SetTitleOffset(yTitleOffset);
- frameF->GetYaxis()->SetTitleSize(yTitleSize);
- frameF->GetYaxis()->SetLabelSize(yLabelSize);
- frameF->GetYaxis()->SetDecimals(2);
- frameF->GetXaxis()->SetTitleOffset(xTitleOffset);
- frameF->GetXaxis()->SetLabelSize(xLabelSize);
- frameF->GetXaxis()->SetTitleSize(xTitleSize);
- frameF->SetMarkerStyle(20);
- //passHist->SetMinimum(0.5);
- //passHist->SetMaximum(1.01);
- frameF->SetMarkerColor(kRed);
- frameF->SetLineColor(kRed);
- frameF->Draw("pe");
+    TLatex failFitInfo;
+    failFitInfo.SetNDC();
+    failFitInfo.SetTextFont(42);
+    failFitInfo.SetTextSize(0.03);
 
- c1->SaveAs("pass_fail_" + etbinNames.at(ibin) + ".png");
- delete passHist;
- delete failHist;
- delete c1;
+    TString chiFail;
+    chiFail.Form("chi^{2}/NDF = %.3f", chi2F);
+    failFitInfo.DrawLatex(0.65,0.85, chiFail);
+
+    c1->SaveAs("pass_fail_" + etbinNames.at(ibin) + ".png");
+    delete passHist;
+    delete failHist;
+    delete c1;
  }
 
  //TGraphAsymmErrors* eff = new TGraphAsymmErrors(hPtotalSig,htotalSig,"B");
