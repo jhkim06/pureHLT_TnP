@@ -39,6 +39,7 @@
 #include "RooPlot.h"
 #include "RooExponential.h"
 #include "RooFFTConvPdf.h"
+#include "RooExtendPdf.h"
 #include "TText.h"
 #include "RooFitResult.h"
 #include "RooRealBinding.h"
@@ -169,6 +170,7 @@ void pureHLTTnP()
 
  for( int ibin = 0; ibin < NphiBins-1; ibin++){
 
+ //if(ibin != 1) continue;
  TString lowerBound, upperBound;
  lowerBound.Form("%f", phiBins[ibin]);
  upperBound.Form("%f", phiBins[ibin+1]);
@@ -199,8 +201,11 @@ void pureHLTTnP()
 
  RooRealVar massP("massP","m_{ee} [GeV]", 60., 120.);
  RooRealVar massF("massF","m_{ee} [GeV]", 60., 120.);
- RooDataHist dsDataP("dsDataP","dsDataP",RooArgSet(massP),Import(*passHist));
- RooDataHist dsDataF("dsDataF","dsDataF",RooArgSet(massF),Import(*failHist));
+ //RooDataHist dsDataP("dsDataP","dsDataP",RooArgSet(massP),Import(*passHist));
+ //RooDataHist dsDataF("dsDataF","dsDataF",RooArgSet(massF),Import(*failHist));
+
+ RooDataHist dsDataP("dsDataP","dsDataP",massP,passHist);
+ RooDataHist dsDataF("dsDataF","dsDataF",massF,failHist);
 
  RooPlot* frameP = massP.frame(Name("passing"), Title("passing")) ;
  RooPlot* frameF = massF.frame(Name("failing"), Title("failing")) ;
@@ -260,23 +265,36 @@ void pureHLTTnP()
  RooFFTConvPdf BWxCBDataP("BWxCBDataP", "BW (x) CB", massP, bwP, cbDataP);
  RooCMSShape bgP("bgP", "bgP", massP, alphacmsP, betacmsP, gammacmsP, peakcmsP);
 
+ // use RooExtendPdf
+ massP.setRange("signal",81,101) ;
+ RooExtendPdf eBWxCBDataP("esigP", "esigP", BWxCBDataP, nsigP, "signal");
+ RooExtendPdf ebgP("ebkgP", "ebkgP", bgP, nbkgP,"signal");
+
  RooBreitWigner bwF("bwF","bwF", massF, meanF, sigmaF);
  RooCBShape cbDataF("cbDataF","cb", massF, cbMeanDataF, cbSigmaDataF, cbAlphaDataF, cbNDataF);
  RooFFTConvPdf BWxCBDataF("BWxCBDataF", "BW (x) CB", massF, bwF, cbDataF);
  RooCMSShape bgF("bgF", "bgF", massF, alphacmsF, betacmsF, gammacmsF, peakcmsF);
 
- RooAddPdf dataModelP("dataModelP","dataModelP",RooArgList(BWxCBDataP,bgP), RooArgList(nsigP,nbkgP)) ;
- RooAddPdf dataModelF("dataModelF","dataModelF",RooArgList(BWxCBDataF,bgF), RooArgList(nsigF,nbkgF)) ;
+ massF.setRange("signal",81,101) ;
+ RooExtendPdf eBWxCBDataF("esigF", "esigF", BWxCBDataF, nsigF, "signal");
+ RooExtendPdf ebgF("ebkgF", "ebkgF", bgF, nbkgF,"signal");
+
+ //RooAddPdf dataModelP("dataModelP","dataModelP",RooArgList(BWxCBDataP,bgP), RooArgList(nsigP,nbkgP)) ;
+ RooAddPdf dataModelP("dataModelP","dataModelP",RooArgList(eBWxCBDataP,ebgP)) ;
+ //RooAddPdf dataModelF("dataModelF","dataModelF",RooArgList(BWxCBDataF,bgF), RooArgList(nsigF,nbkgF)) ;
+ RooAddPdf dataModelF("dataModelF","dataModelF",RooArgList(eBWxCBDataF,ebgF)) ;
 
 
  // fit passing probes
- RooFitResult* dataFitP = dataModelP.fitTo(dsDataP,Save(),Extended(), SumW2Error(kTRUE)) ;
+ //RooFitResult* dataFitP = dataModelP.fitTo(dsDataP,Save(),Extended(), SumW2Error(kTRUE)) ;
+ RooFitResult* dataFitP = dataModelP.fitTo(dsDataP,Save(),Extended()) ;
  dataModelP.plotOn(frameP,LineColor(kBlack)) ;
  dataModelP.plotOn(frameP,Components(BWxCBDataP) ,LineColor(kRed), LineStyle(kDashed)) ;
  dataModelP.plotOn(frameP,Components(bgP) ,LineColor(kBlue), LineStyle(kDashed)) ;
 
  // fit failing probes
- RooFitResult* dataFitF = dataModelF.fitTo(dsDataF,Save(),Extended(), SumW2Error(kTRUE)) ;
+ //RooFitResult* dataFitF = dataModelF.fitTo(dsDataF,Save(),Extended(), SumW2Error(kTRUE)) ;
+ RooFitResult* dataFitF = dataModelF.fitTo(dsDataF,Save(),Extended()) ;
  dataModelF.plotOn(frameF,LineColor(kRed)) ;
  dataModelF.plotOn(frameF,Components(BWxCBDataF) ,LineColor(kBlue)) ;
  dataModelF.plotOn(frameF,Components(bgF) ,LineColor(kCyan)) ;
@@ -287,25 +305,28 @@ void pureHLTTnP()
  std::cout<<"Chi Square=:"<<chi2P<<std::endl;
  std::cout<<"Chi Square=:"<<chi2F<<std::endl;
 
- massP.setRange("signal",81,101) ;
- RooAbsReal* fracSigP = BWxCBDataP.createIntegral(massP, massP, "signal") ;
- Double_t nsig_fracP  = nsigP.getVal() * fracSigP->getVal();
- massP.setRange("background",81,101) ;
- RooAbsReal* fracBkgP = bgP.createIntegral(massP, massP, "background") ;
- Double_t nbkg_fracP  = nbkgP.getVal() * fracBkgP->getVal();
+ cout << "nsig: " << nsigP.getVal() << " error: " << nsigP.getError()<< endl;
+ cout << "nsig: " << nsigF.getVal() << " error: " << nsigF.getError()<< endl;
 
- cout<< "Pass Signal = " << nsig_fracP << " nsigP: " << nsigP.getVal() << " nsigP error: " << nsigP.getError() << endl;
- cout<< "Pass BKGD = " << nbkg_fracP  << " nbkgP: " << nbkgP.getVal() << endl;
+ //massP.setRange("signal",81,101) ;
+ //RooAbsReal* fracSigP = BWxCBDataP.createIntegral(massP, massP, "signal") ;
+ //Double_t nsig_fracP  = nsigP.getVal() * fracSigP->getVal();
+ //massP.setRange("background",81,101) ;
+ //RooAbsReal* fracBkgP = bgP.createIntegral(massP, massP, "background") ;
+ //Double_t nbkg_fracP  = nbkgP.getVal() * fracBkgP->getVal();
 
- massF.setRange("signal",81,101) ;
- RooAbsReal* fracSigF = BWxCBDataF.createIntegral(massF, massF, "signal") ;
- Double_t nsig_fracF  = nsigF.getVal() * fracSigF->getVal();
- massF.setRange("background",80,101) ;
- RooAbsReal* fracBkgF = bgF.createIntegral(massF, massF, "background") ;
- Double_t nbkg_fracF  = nbkgF.getVal() * fracBkgF->getVal();
+ //cout<< "Pass Signal = " << nsig_fracP << " nsigP: " << nsigP.getVal() << " nsigP error: " << nsigP.getError() << endl;
+ //cout<< "Pass BKGD = " << nbkg_fracP  << " nbkgP: " << nbkgP.getVal() << endl;
 
- cout<< "Fail Signal = " << nsig_fracF << endl;
- cout<< "Fail BKGD = " << nbkg_fracF << endl;
+ //massF.setRange("signal",81,101) ;
+ //RooAbsReal* fracSigF = BWxCBDataF.createIntegral(massF, massF, "signal") ;
+ //Double_t nsig_fracF  = nsigF.getVal() * fracSigF->getVal();
+ //massF.setRange("background",80,101) ;
+ //RooAbsReal* fracBkgF = bgF.createIntegral(massF, massF, "background") ;
+ //Double_t nbkg_fracF  = nbkgF.getVal() * fracBkgF->getVal();
+
+ //cout<< "Fail Signal = " << nsig_fracF << endl;
+ //cout<< "Fail BKGD = " << nbkg_fracF << endl;
 
  // fill total signal and passing signal histograms 
  htotalSig->SetBinContent(ibin+1, nsigP.getVal()+nsigF.getVal());
@@ -374,7 +395,8 @@ void pureHLTTnP()
  delete c1;
  }
 
- TGraphAsymmErrors* eff = new TGraphAsymmErrors(hPtotalSig,htotalSig,"B");
+ //TGraphAsymmErrors* eff = new TGraphAsymmErrors(hPtotalSig,htotalSig,"B");
+ TGraphAsymmErrors* eff = new TGraphAsymmErrors(hPtotalSig,htotalSig);
 
  TCanvas *c1 = new TCanvas("c1","c1",1000,800);
  gStyle->SetOptStat(0);
