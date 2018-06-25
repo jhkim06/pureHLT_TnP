@@ -167,9 +167,28 @@ void pureHLTTnP()
  TH1D* htotalSig = new TH1D("htotalSig","htotalSig", NphiBins-1, phiBins);
  TH1D* hPtotalSig = new TH1D("hPtotalSig","hPtotalSig", NphiBins-1, phiBins);
 
+ // variables in the input tnp tree
+ Int_t tagHLTRegion;
+ struct HLTEgammaStruct {
+     float et,nrgy,eta,phi,hadem,sigmaIEtaIEta,dEtaIn,dPhiIn,nrMissHits,nrClus,seedClusEFrac,pmDPhi1,pmDPhi2,pmDPhi3,pmDPhi4,pmDPhi1Info,pmDPhi2Info,pmDPhi3Info,pmDPhi4Info,pmDRZ1,pmDRZ2,pmDRZ3,pmDRZ4,pmDRZ1Info,pmDRZ2Info,pmDRZ3Info,pmDRZ4Info,phiWidth,etaWidth,s2,dPhi1BestS2,dPhi2BestS2,dPhi3BestS2,dRZ2BestS2,dRZ3BestS2,ecalIso,hcalIso,trkIso,trkChi2,invEOInvP,trkIso2016;
+ };
+ HLTEgammaStruct probeHLT;
+ HLTEgammaStruct tagHLT;
+ Double_t tagTrigs[4];
+ tree->SetBranchAddress("tagHLTRegion",&tagHLTRegion);
+ tree->SetBranchAddress("probeHLT",&probeHLT);
+ tree->SetBranchAddress("tagHLT",&tagHLT);
+ tree->SetBranchAddress("tagTrigs",&tagTrigs);
+
+ Long64_t nentries = tree->GetEntries();
+   for (Long64_t i=0;i<100;i++) {
+     tree->GetEntry(i);
+     cout << "tagHLTRegion: " << tagHLTRegion << " eta: " << tagHLT.eta << " phi: " << tagHLT.phi << endl;   
+ }
+
  for( int ibin = 0; ibin < NphiBins-1; ibin++){
 
-    //if(ibin != 1) continue;
+    if(ibin != 1) continue;
     TString lowerBound, upperBound;
     lowerBound.Form("%f", phiBins[ibin]);
     upperBound.Form("%f", phiBins[ibin+1]);
