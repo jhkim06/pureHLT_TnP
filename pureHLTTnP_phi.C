@@ -168,23 +168,29 @@ void pureHLTTnP()
  TH1D* hPtotalSig = new TH1D("hPtotalSig","hPtotalSig", NphiBins-1, phiBins);
 
  // variables in the input tnp tree
- Int_t tagHLTRegion;
  struct HLTEgammaStruct {
      float et,nrgy,eta,phi,hadem,sigmaIEtaIEta,dEtaIn,dPhiIn,nrMissHits,nrClus,seedClusEFrac,pmDPhi1,pmDPhi2,pmDPhi3,pmDPhi4,pmDPhi1Info,pmDPhi2Info,pmDPhi3Info,pmDPhi4Info,pmDRZ1,pmDRZ2,pmDRZ3,pmDRZ4,pmDRZ1Info,pmDRZ2Info,pmDRZ3Info,pmDRZ4Info,phiWidth,etaWidth,s2,dPhi1BestS2,dPhi2BestS2,dPhi3BestS2,dRZ2BestS2,dRZ3BestS2,ecalIso,hcalIso,trkIso,trkChi2,invEOInvP,trkIso2016;
  };
  HLTEgammaStruct probeHLT;
  HLTEgammaStruct tagHLT;
- Double_t tagTrigs[4];
+ int tagTrigs[4];
+ int probeTrigs[4];
+ int tagHLTRegion;
+ int probeHLTRegion;
+ float mass;
  tree->SetBranchAddress("tagHLTRegion",&tagHLTRegion);
+ tree->SetBranchAddress("probeHLTRegion",&probeHLTRegion);
  tree->SetBranchAddress("probeHLT",&probeHLT);
  tree->SetBranchAddress("tagHLT",&tagHLT);
  tree->SetBranchAddress("tagTrigs",&tagTrigs);
+ tree->SetBranchAddress("probeTrigs",&probeTrigs);
+ tree->SetBranchAddress("mass",&mass);
 
- Long64_t nentries = tree->GetEntries();
-   for (Long64_t i=0;i<100;i++) {
-     tree->GetEntry(i);
-     cout << "tagHLTRegion: " << tagHLTRegion << " eta: " << tagHLT.eta << " phi: " << tagHLT.phi << endl;   
- }
+ //Long64_t nentries = tree->GetEntries();
+ //  for (Long64_t i=0;i<100;i++) {
+ //    tree->GetEntry(i);
+ //    cout << "tagHLTRegion: " << tagHLTRegion << " eta: " << tagHLT.eta << " phi: " << tagHLT.phi << endl;   
+ //}
 
  for( int ibin = 0; ibin < NphiBins-1; ibin++){
 
@@ -213,6 +219,34 @@ void pureHLTTnP()
     passHist = MakePassHist(tree, "2018 RunBv1, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, passingProbe); 
     failHist = MakePassHist(tree, "2018 RunBv1, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, failingProbe); 
 
+
+    TFile *temp_file = new TFile("temp.root","RECREATE");
+    TTree* tnp_tree = new TTree("tnpTree","tnpTree");
+
+    temp_file->cd();
+    float passBranch; tnp_tree->Branch("massP", &passBranch);
+    float failBranch; tnp_tree->Branch("massF", &failBranch);
+
+    // fill tree
+    Long64_t nentries = tree->GetEntries();
+      for (Long64_t i=0;i<nentries;i++) {
+        tree->GetEntry(i);
+
+        passBranch = -999.;
+        failBranch = -999.;
+
+        // probes
+        if( mass > 60 && mass < 120 && tagHLTRegion==0 && probeHLT.phi > phiBins[ibin] && probeHLT.phi < phiBins[ibin+1] && probeHLT.et > 50 && (tagTrigs[2]&0x800)!=0 &&  (probeTrigs[2]&0x10)!=0){
+           // passing probe
+           if((probeTrigs[2]&0x20)!=0){ passBranch = mass; tnp_tree->Fill();} 
+           // failing probes
+           if((probeTrigs[2]&0x20)==0){ failBranch = mass; tnp_tree->Fill();}
+
+        }
+        //tnp_tree->Fill(); 
+    }
+
+    infile1->cd();
     // Set up Extended binned Maximum likelihood fit
 
     // total number of probes in the histogram
@@ -222,13 +256,16 @@ void pureHLTTnP()
     RooRealVar massP("massP","m_{ee} [GeV]", 60., 120.);
     RooRealVar massF("massF","m_{ee} [GeV]", 60., 120.);
 
-    RooDataHist dsDataP("dsDataP","dsDataP",massP,passHist);
-    RooDataHist dsDataF("dsDataF","dsDataF",massF,failHist);
+    //RooDataHist dsDataP("dsDataP","dsDataP",massP,passHist);
+    //RooDataHist dsDataF("dsDataF","dsDataF",massF,failHist);
+
+    RooDataSet dsDataP("dsDataP","dsDataP",tnp_tree,massP);
+    RooDataSet dsDataF("dsDataF","dsDataF",tnp_tree,massF);
 
     RooPlot* frameP = massP.frame(Name("passing"), Title("passing")) ;
     RooPlot* frameF = massF.frame(Name("failing"), Title("failing")) ;
-    frameP->SetMaximum(1.2*passHist->GetMaximum());
-    frameF->SetMaximum(1.2*failHist->GetMaximum());
+    //frameP->SetMaximum(1.2*passHist->GetMaximum());
+    //frameF->SetMaximum(1.2*failHist->GetMaximum());
 
     // plot histograms on frames
     dsDataP.plotOn(frameP, Name("dsDataP"), MarkerColor(kBlack), MarkerStyle(21), MarkerSize(1.2)) ;
@@ -253,16 +290,16 @@ void pureHLTTnP()
     RooRealVar sigmaF("sigmaF","sigmaF",2.5);
 
     // RooCMSShape
-    //RooRealVar alphacmsP("alphacmsP","alphacmsP", 60., 50., 80.);
-    //RooRealVar betacmsP("betacmsP","betacmsP", 0.05,0.01,0.2);
-    //RooRealVar gammacmsP("gammacmsP","gammacmsP", 0.1, 0, 1);
-    //RooRealVar peakcmsP("peakcmsP","peakcmsP", 90.0);
+    RooRealVar alphacmsP("alphacmsP","alphacmsP", 60., 50., 100.);
+    RooRealVar betacmsP("betacmsP","betacmsP", 0.05,0.01,0.4);
+    RooRealVar gammacmsP("gammacmsP","gammacmsP", 0.1, 0, 1);
+    RooRealVar peakcmsP("peakcmsP","peakcmsP", 90.0);
 
     // values from egm_tnp_analysis
-    RooRealVar alphacmsP("alphacmsP","alphacmsP", 90., 50., 100.);
-    RooRealVar betacmsP("betacmsP","betacmsP", 0.05,0.01,0.5);
-    RooRealVar gammacmsP("gammacmsP","gammacmsP", 0.1, 0., 1.);
-    RooRealVar peakcmsP("peakcmsP","peakcmsP", 90.0, 85., 95.);
+    //RooRealVar alphacmsP("alphacmsP","alphacmsP", 90., 50., 100.);
+    //RooRealVar betacmsP("betacmsP","betacmsP", 0.05,0.01,0.5);
+    //RooRealVar gammacmsP("gammacmsP","gammacmsP", 0.1, 0., 1.);
+    //RooRealVar peakcmsP("peakcmsP","peakcmsP", 90.0, 85., 95.);
 
     RooRealVar alphacmsF("alphacmsF","alphacmsF", 60., 50., 80.);
     RooRealVar betacmsF("betacmsF","betacmsF", 0.05,0.01,0.2);
@@ -412,6 +449,8 @@ void pureHLTTnP()
     delete passHist;
     delete failHist;
     delete c1;
+    delete tnp_tree;
+    delete temp_file;
  }
 
  //TGraphAsymmErrors* eff = new TGraphAsymmErrors(hPtotalSig,htotalSig,"B");
