@@ -1,5 +1,3 @@
-//root -b -q 'draw_effS.C()'
-
 #include <TROOT.h>                    // access to gROOT, entry point to ROOT system
 #include <TSystem.h>                  // interface to OS
 #include <TFile.h>                    // file handle class
@@ -40,6 +38,7 @@
 #include "RooExponential.h"
 #include "RooFFTConvPdf.h"
 #include "RooExtendPdf.h"
+#include "RooWorkspace.h"
 #include "TText.h"
 #include "RooFitResult.h"
 #include "RooRealBinding.h"
@@ -48,6 +47,10 @@
 #include "TLegend.h"
 #include "TGraphErrors.h"
 #include "TPad.h"
+
+/// include pdfs
+#include "RooCBExGaussShape.h"
+#include "RooCMSShape.h"
 
 #include <iostream>
 #include <fstream>
@@ -146,7 +149,7 @@ void pureHLTTnP()
  TFile* infile1 = NULL;
  //TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/CMSSW_10_1_5/ntuple/ntuple_CMSSW_10_1_5_BadPixModuleFix.root";
  //TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/CMSSW_10_1_2_patch2/ntuple/ntuple_CMSSW_10_1_2_patch.root";
- TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/TnPsamples/2018Av3/2018Av3.root";
+ TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/TnPsamples/2018Bv1/2018Bv1.root";
  infile1 = new TFile(filename1);
 
  TTree *tree=0;
@@ -177,8 +180,10 @@ void pureHLTTnP()
     // for pixel matching filter
     TString var = "mass";
     //TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.eta > 0 && probeHLTRegion==1 && probeHLT.et > 30 && (evtTrigs[0]&0x4000000)!=0 && (tagTrigs[2]&0x400000)!=0 &&  (probeTrigs[2]&0x8000)!=0";
-    TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.et > 50  && (tagTrigs[2]&0x800)!=0 &&  (probeTrigs[2]&0x10)!=0";
+    TString sampleCuts = " tagHLTRegion==0 && mass>50 && mass<130 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.et > 50  && (tagTrigs[2]&0x800)!=0 &&  (probeTrigs[2]&0x10)!=0";
+
     cout << sampleCuts << endl;
+
     //TString passingProbe = "(probeTrigs[2]&0x10000)!=0"; // pixel matching filter bit
     //TString failingProbe = "(probeTrigs[2]&0x10000)==0"; // pixel matching filter bit
 
@@ -187,134 +192,181 @@ void pureHLTTnP()
 
     TH1* passHist;
     TH1* failHist;
+
+    bool _useMinos = false;
+    double _xFitMin = 60.;
+    double _xFitMax = 120.;
       
     //passHist = MakePassHist(tree, "Run 315322, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, passingProbe); 
     //failHist = MakePassHist(tree, "Run 315322, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, failingProbe); 
 
-    passHist = MakePassHist(tree, "2018 RunBv1, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, passingProbe); 
-    failHist = MakePassHist(tree, "2018 RunBv1, Eff. w.r.t. HCalIso filter", "Mass", 60, 60., 120., var, sampleCuts, failingProbe); 
+    passHist = MakePassHist(tree, "2018 RunBv1, Eff. w.r.t. HCalIso filter", "Mass", 80, 50., 130., var, sampleCuts, passingProbe); 
+    failHist = MakePassHist(tree, "2018 RunBv1, Eff. w.r.t. HCalIso filter", "Mass", 80, 50., 130., var, sampleCuts, failingProbe); 
 
     // Set up Extended binned Maximum likelihood fit
 
     // total number of probes in the histogram
-    double nToP = passHist->Integral();
-    double nToF = failHist->Integral();
+    double nTotP = passHist->Integral();
+    double nTotF = failHist->Integral();
 
-    RooRealVar massP("massP","m_{ee} [GeV]", 60., 120.);
-    RooRealVar massF("massF","m_{ee} [GeV]", 60., 120.);
+    RooWorkspace *_work;
+    _work = new RooWorkspace("w") ;
 
-    RooDataHist dsDataP("dsDataP","dsDataP",massP,passHist);
-    RooDataHist dsDataF("dsDataF","dsDataF",massF,failHist);
+    //RooRealVar massP("massP","m_{ee} [GeV]", 60., 120.);
+    _work->factory("massP[50,130]");
+    //RooRealVar massF("massF","m_{ee} [GeV]", 60., 120.);
+    _work->factory("massF[50,130]");
 
-    RooPlot* frameP = massP.frame(Name("passing"), Title("passing")) ;
-    RooPlot* frameF = massF.frame(Name("failing"), Title("failing")) ;
-    frameP->SetMaximum(1.2*passHist->GetMaximum());
-    frameF->SetMaximum(1.2*failHist->GetMaximum());
+    //RooDataHist dsDataP("dsDataP","dsDataP",massP,passHist);
+    RooDataHist dsDataP("dsDataP","dsDataP",*_work->var("massP"),passHist);
+     _work->import(dsDataP);
+    //RooDataHist dsDataF("dsDataF","dsDataF",massF,failHist);
+    RooDataHist dsDataF("dsDataF","dsDataF",*_work->var("massF"),failHist);
+     _work->import(dsDataF);
 
-    // plot histograms on frames
-    dsDataP.plotOn(frameP, Name("dsDataP"), MarkerColor(kBlack), MarkerStyle(21), MarkerSize(1.2)) ;
-    dsDataF.plotOn(frameF, Name("dsDataF"), MarkerColor(kBlack), MarkerStyle(21), MarkerSize(1.2)) ;
+    //RooPlot* frameP = massP.frame(Name("passing"), Title("passing")) ;
+    RooPlot* frameP = _work->var("massP")->frame(60,120);
+    frameP->SetTitle("passing probe");
+    //RooPlot* frameF = massF.frame(Name("failing"), Title("failing")) ;
+    RooPlot* frameF = _work->var("massF")->frame(60,120);
+    frameF->SetTitle("failing probe");
 
-    // Crystal ball function
-    RooRealVar cbMeanDataP("cbMeanDataP","cbMean", -2., -4., 4.);
-    RooRealVar cbSigmaDataP("cbSigmaDataP","cbSigma", 2., 0.5, 4.);
-    RooRealVar cbAlphaDataP("cbAlphaDataP","cbAlpha", 20., 0.1, 50);
-    RooRealVar cbNDataP("cbNDataP","cbN", 30., 0.2, 50);
+     // set initial fitting variables for passing pdf
+    _work->factory("meanP[-0.0,-5.0,5.0]");
+    _work->factory("sigmaP[1,0.2,6.0]");
+    _work->factory("alphaP[2.0,1.2,3.5]");
+    _work->factory("nP[3,-5,5]");
+    _work->factory("sigmaP_2[1.5,0.,6.0]");
+    _work->factory("sosP[1,0.,5.0]");
+    _work->factory("tailLeft[-1]");
 
-    RooRealVar cbMeanDataF("cbMeanDataF","cbMean", -1., -4., 4.);
-    RooRealVar cbSigmaDataF("cbSigmaDataF","cbSigma", 2., 0.5, 4.);
-    RooRealVar cbAlphaDataF("cbAlphaDataF","cbAlpha", 1., 0.1, 50);
-    RooRealVar cbNDataF("cbNDataF","cbN", 2., 0.2, 50);
+    _work->factory("acmsP[60.,50.,150.]");
+    _work->factory("betaP[0.04,0.01,0.06]");
+    _work->factory("gammaP[0.1, 0.005, 1]");
+    _work->factory("peakP[90.0]");
 
-    // BreitWigner 
-    RooRealVar meanP("meanP","meanP",91.2);
-    RooRealVar sigmaP("sigmaP","sigmaP",2.5);
+    _work->factory("mean1P[91.2,85.,95.]");
+    _work->factory("sigma1P[2.5,0.,10.0]");
 
-    RooRealVar meanF("meanF","meanF",91.2);
-    RooRealVar sigmaF("sigmaF","sigmaF",2.5);
+    _work->factory("mean2P[91.2,85.,95.]");
+    _work->factory("sigma2P[0.1,0.,0.5]");
 
-    // RooCMSShape
-    //RooRealVar alphacmsP("alphacmsP","alphacmsP", 60., 50., 80.);
-    //RooRealVar betacmsP("betacmsP","betacmsP", 0.05,0.01,0.2);
-    //RooRealVar gammacmsP("gammacmsP","gammacmsP", 0.1, 0, 1);
-    //RooRealVar peakcmsP("peakcmsP","peakcmsP", 90.0);
+    // set initial fitting variables for failing pdf
+    _work->factory("meanF[-0.0,-5.0,5.0]");
+    _work->factory("sigmaF[2,0.2,15.0]");
+    _work->factory("alphaF[2.0,1.2,3.5]");
+    _work->factory("nF[3,-5,5]");
+    _work->factory("sigmaF_2[2.0,0.,6.0]");
+    _work->factory("sosF[1,0.,5.0]");
 
-    // values from egm_tnp_analysis
-    RooRealVar alphacmsP("alphacmsP","alphacmsP", 90., 50., 100.);
-    RooRealVar betacmsP("betacmsP","betacmsP", 0.05,0.01,0.5);
-    RooRealVar gammacmsP("gammacmsP","gammacmsP", 0.1, 0., 1.);
-    RooRealVar peakcmsP("peakcmsP","peakcmsP", 90.0, 85., 95.);
+    _work->factory("acmsF[60.,50.,75.]");
+    _work->factory("betaF[0.04,0.01,0.06]");
+    _work->factory("gammaF[0.1, 0.005, 1]");
+    _work->factory("peakF[90.0]");
 
-    RooRealVar alphacmsF("alphacmsF","alphacmsF", 60., 50., 80.);
-    RooRealVar betacmsF("betacmsF","betacmsF", 0.05,0.01,0.2);
-    RooRealVar gammacmsF("gammacmsF","gammacmsF", 0.1, 0, 1);
-    RooRealVar peakcmsF("peakcmsF","peakcmsF", 90.0);
+    _work->factory("mean1F[91.2,85.,95.]");
+    _work->factory("sigma1F[2.5,0.,10.0]");
 
-    //RooRealVar alphacmsF("alphacmsF","alphacmsF", 80., 50., 120.);
-    //RooRealVar betacmsF("betacmsF","betacmsF", 0.05,0.01,0.2);
-    //RooRealVar gammacmsF("gammacmsF","gammacmsF", 0.1, -2., 2.);
-    //RooRealVar peakcmsF("peakcmsF","peakcmsF", 90.0);
+    _work->factory("mean2F[91.2,85.,95.]");
+    _work->factory("sigma2F[0.1,0.,0.5]");
 
-    RooRealVar nsigP("nsigP","signal events1", nToP*0.99,0.,nToP); // https://github.com/michelif/egm_tnp_analysis/blob/egm_tnp_Moriond18_v3.0/libCpp/histFitter.C#L121
-    RooRealVar nbkgP("nbkgP","signal background events1",nToP*0.01,0.,nToP);
+    // pdf for passing probes
+    _work->factory("RooCBExGaussShape::sigResPass(massP,meanP,expr('sqrt(sigmaP*sigmaP+sosP*sosP)',{sigmaP,sosP}),alphaP,nP, expr('sqrt(sigmaP_2*sigmaP_2+sosP*sosP)',{sigmaP_2,sosP}),tailLeft)");
+    _work->factory("BreitWigner::bwP(massP,mean1P,sigma1P)");
+    _work->factory("Gaussian::g1P(massP,mean1P,sigma1P)");
+    _work->factory("Gaussian::g2P(massP,mean2P,sigma2P)");
+    _work->factory(TString::Format("ng1P[%f,0.5,%f]",nTotP*0.5,nTotP));
+    _work->factory(TString::Format("ng2P[%f,0.5,%f]",nTotP*0.1,nTotP));
+    _work->factory("SUM::gaussP(ng1P*g1P,ng2P*g2P)");
+    _work->factory("FCONV::sigPass(massP, bwP, sigResPass)");
+    _work->factory("RooCMSShape::bkgPass(massP, acmsP, betaP, gammaP, peakP)");
+    _work->factory(TString::Format("nSigP[%f,0.5,%f]",nTotP*0.9,nTotP*1.5));
+    _work->factory(TString::Format("nBkgP[%f,0.5,%f]",nTotP*0.1,nTotP*1.5));
+    //_work->factory("RooExtendPdf::esigPass(sigPass, nSigP)");
+    //_work->factory("RooExtendPdf::ebkgPass(bkgPass, nBkgP)");
+    _work->var("massP")->setRange("window",81.,101.);
+    RooExtendPdf esigPass("esigPass", "esigPass", *_work->pdf("sigPass"), *_work->var("nSigP"), "window");
+    RooExtendPdf ebkgPass("ebkgPass", "ebkgPass", *_work->pdf("bkgPass"), *_work->var("nBkgP"), "window");
+     //_work->import(esigPass);
+     //_work->import(ebkgPass);
+    //_work->factory("SUM::pdfPass(nSigP*esigPass,nBkgP*ebkgPass)");
+     RooAddPdf _pdfPass("pdfPass","pdfPass",RooArgList(esigPass,ebkgPass)) ;
+     //_work->import(_pdfPass);
+    //_work->factory("SUM::pdfPass(esigPass,ebkgPass)");
 
-    RooRealVar nsigF("nsigF","signal events1",nToF*0.9,0.,nToF);
-    RooRealVar nbkgF("nbkgF","signal background events1",nToF*0.1,0.,nToF);
+    // pdf for failing probes
+    _work->factory("RooCBExGaussShape::sigResFail(massF,meanF,expr('sqrt(sigmaF*sigmaF+sosF*sosF)',{sigmaF,sosF}),alphaF,nF, expr('sqrt(sigmaF_2*sigmaF_2+sosF*sosF)',{sigmaF_2,sosF}),tailLeft)");
+    _work->factory("BreitWigner::bwF(massF,mean1F,sigma1F)");
+    _work->factory("Gaussian::g1F(massF,mean1F,sigma1F)");
+    _work->factory("Gaussian::g2F(massF,mean2F,sigma2F)");
+    _work->factory(TString::Format("ng1F[%f,0.5,%f]",nTotF*0.5,nTotF));
+    _work->factory(TString::Format("ng2F[%f,0.5,%f]",nTotF*0.1,nTotF));
+    _work->factory("SUM::gaussF(ng1F*g1F,ng2F*g2F)");
+    _work->factory("FCONV::sigFail(massF, bwF, sigResFail)");
+    _work->factory("RooCMSShape::bkgFail(massF, acmsF, betaF, gammaF, peakF)");
+    _work->factory(TString::Format("nSigF[%f,0.5,%f]",nTotF*0.9,nTotF*1.5));
+    _work->factory(TString::Format("nBkgF[%f,0.5,%f]",nTotF*0.1,nTotF*1.5));
+    _work->var("massF")->setRange("window",81.,101.);
+    RooExtendPdf esigFail("esigFail", "esigFail", *_work->pdf("sigFail"), *_work->var("nSigF"), "window");
+    RooExtendPdf ebkgFail("ebkgFail", "ebkgFail", *_work->pdf("bkgFail"), *_work->var("nBkgF"), "window");
+    //_work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
+    RooAddPdf _pdfFail("pdfFail","pdfFail",RooArgList(esigFail,ebkgFail)) ;
 
-    // create passing pdfs
-    RooBreitWigner bwP("bwP","bwP", massP, meanP, sigmaP);
-    RooCBShape cbDataP("cbDataP","cb", massP, cbMeanDataP, cbSigmaDataP, cbAlphaDataP, cbNDataP);
-    RooFFTConvPdf BWxCBDataP("BWxCBDataP", "BW (x) CB", massP, bwP, cbDataP);
-    RooCMSShape bgP("bgP", "bgP", massP, alphacmsP, betacmsP, gammacmsP, peakcmsP);
+    //RooAbsPdf *pdfPass = _work->pdf("pdfPass");
+    //RooAbsPdf *pdfFail = _work->pdf("pdfFail");
 
-    // use RooExtendPdf
-    massP.setRange("signal",81,101) ;
-    RooExtendPdf eBWxCBDataP("esigP", "esigP", BWxCBDataP, nsigP, "signal");
-    RooExtendPdf ebgP("ebkgP", "ebkgP", bgP, nbkgP,"signal");
+    _work->var("massP")->setRange("fitMassRange", 50., 130.);
+    _work->var("massF")->setRange("fitMassRange", 50., 130.);
 
-    // create failing pdfs
-    RooBreitWigner bwF("bwF","bwF", massF, meanF, sigmaF);
-    RooCBShape cbDataF("cbDataF","cb", massF, cbMeanDataF, cbSigmaDataF, cbAlphaDataF, cbNDataF);
-    RooFFTConvPdf BWxCBDataF("BWxCBDataF", "BW (x) CB", massF, bwF, cbDataF);
-    RooCMSShape bgF("bgF", "bgF", massF, alphacmsF, betacmsF, gammacmsF, peakcmsF);
+    //RooFitResult* resPass = pdfPass->fitTo(*_work->data("dsDataP"),Minos(_useMinos),SumW2Error(kTRUE),Save(), Range("fitMassRange"));
+    //RooFitResult* resFail = pdfFail->fitTo(*_work->data("dsDataF"),Minos(_useMinos),SumW2Error(kTRUE),Save(), Range("fitMassRange"));
 
-    // use RooExtendPdf
-    massF.setRange("signal",81,101) ;
-    RooExtendPdf eBWxCBDataF("esigF", "esigF", BWxCBDataF, nsigF, "signal");
-    RooExtendPdf ebgF("ebkgF", "ebkgF", bgF, nbkgF,"signal");
+    //RooFitResult* resPass = pdfPass->fitTo(*_work->data("dsDataP"), Minos(_useMinos), Range("fitMassRange"));
+    RooFitResult* resPass = _pdfPass.fitTo(*_work->data("dsDataP"), Save(),Extended());
+    //RooFitResult* resFail = pdfFail->fitTo(*_work->data("dsDataF"), Minos(_useMinos), Range("fitMassRange"));
+    RooFitResult* resFail = _pdfFail.fitTo(*_work->data("dsDataF"),Save(),Extended(),SumCoefRange("fitMassRange"));
 
-    RooAddPdf dataModelP("dataModelP","dataModelP",RooArgList(eBWxCBDataP,ebgP)) ;
-    RooAddPdf dataModelF("dataModelF","dataModelF",RooArgList(eBWxCBDataF,ebgF)) ;
+    RooPlot *pPass = _work->var("massP")->frame(60.,120.);
+    pPass->SetTitle("passing probe");
 
-    // fit passing probes
-    //RooFitResult* dataFitP = dataModelP.fitTo(dsDataP,Save(),Extended(), SumW2Error(kTRUE)) ;
-    RooFitResult* dataFitP = dataModelP.fitTo(dsDataP,Save(),Extended()) ;
-    dataModelP.plotOn(frameP,Name("dataModelP"), LineColor(kBlack)) ;
-    dataModelP.plotOn(frameP,Components(BWxCBDataP) ,LineColor(kRed), LineStyle(kDashed)) ;
-    dataModelP.plotOn(frameP,Components(bgP) ,LineColor(kBlue), LineStyle(kDashed)) ;
+    dsDataP.plotOn(pPass, Name("dsDataP"), MarkerColor(kBlack), MarkerStyle(21), MarkerSize(1.2)) ;
+    _pdfPass.plotOn(pPass,Name("pdfPass"),LineColor(kRed)) ;
+    _pdfPass.plotOn(pPass,Components(esigPass) ,LineColor(kBlack), LineStyle(kDashed)) ;
+    _pdfPass.plotOn(pPass,Components(ebkgPass) ,LineColor(kBlue), LineStyle(kDashed)) ;
+    
+    //_work->data("dsDataP")->plotOn( pPass );
+    //_work->pdf("pdfPass")->plotOn( pPass, LineColor(kRed) );
+    //_work->pdf("pdfPass")->plotOn( pPass, Components("esigPass"),LineColor(kBlack),LineStyle(kDashed));
+    //_work->pdf("pdfPass")->plotOn( pPass, Components("ebkgPass"),LineColor(kBlue),LineStyle(kDashed));
 
-    // fit failing probes
-    //RooFitResult* dataFitF = dataModelF.fitTo(dsDataF,Save(),Extended(), SumW2Error(kTRUE)) ;
-    RooFitResult* dataFitF = dataModelF.fitTo(dsDataF,Save(),Extended()) ;
-    dataModelF.plotOn(frameF,Name("dataModelF"),LineColor(kBlack)) ;
-    dataModelF.plotOn(frameF,Components(BWxCBDataF) ,LineColor(kRed), LineStyle(kDashed)) ;
-    dataModelF.plotOn(frameF,Components(bgF) ,LineColor(kBlue), LineStyle(kDashed)) ;
+    RooPlot *pFail = _work->var("massF")->frame(60.,120.);
+    pFail->SetTitle("Failing probe");
 
-    Double_t chi2P = frameP->chiSquare("dataModelP", "dsDataP", 10);
-    Double_t chi2F = frameF->chiSquare("dataModelF", "dsDataF", 10);
-    std::cout<<"Chi Square=:"<<chi2P<<std::endl;
-    std::cout<<"Chi Square=:"<<chi2F<<std::endl;
+    dsDataF.plotOn(pFail, Name("dsDataF"), MarkerColor(kBlack), MarkerStyle(21), MarkerSize(1.2)) ;
+    _pdfFail.plotOn(pFail,Name("pdfFail"),LineColor(kRed)) ;
+    _pdfFail.plotOn(pFail,Components(esigFail) ,LineColor(kBlack), LineStyle(kDashed)) ;
+    _pdfFail.plotOn(pFail,Components(ebkgFail) ,LineColor(kBlue), LineStyle(kDashed)) ;
 
-    cout << "Passing nsig: " << nsigP.getVal() << " error: " << nsigP.getError()<< endl;
-    cout << "Failing nsig: " << nsigF.getVal() << " error: " << nsigF.getError()<< endl;
+    //_work->data("dsDataF")->plotOn( pFail );
+    //_work->pdf("pdfFail")->plotOn( pFail, LineColor(kRed) );
+    //_work->pdf("pdfFail")->plotOn( pFail, Components("sigFail"),LineColor(kBlack),LineStyle(kDashed));
+    //_work->pdf("pdfFail")->plotOn( pFail, Components("bkgFail"),LineColor(kBlue),LineStyle(kDashed));
+    
+    //Double_t chi2P = frameP->chiSquare("dataModelP", "dsDataP", 10);
+    //Double_t chi2F = frameF->chiSquare("dataModelF", "dsDataF", 10);
+    //std::cout<<"Chi Square=:"<<chi2P<<std::endl;
+    //std::cout<<"Chi Square=:"<<chi2F<<std::endl;
 
-    dataFitP->Print();
+    cout << "Passing nsig: " << _work->var("nSigP")->getVal() << " error: " << _work->var("nSigP")->getError()<< endl;
+    cout << "Failing nsig: " << _work->var("nSigF")->getVal() << " error: " << _work->var("nSigF")->getError()<< endl;
+
+    //dataFitP->Print();
 
     // fill total signal and passing signal histograms 
-    htotalSig->SetBinContent(ibin+1, nsigP.getVal()+nsigF.getVal());
-    htotalSig->SetBinError(ibin+1, nsigP.getError()+nsigF.getError());
-    hPtotalSig->SetBinContent(ibin+1, nsigP.getVal());
-    hPtotalSig->SetBinError(ibin+1, nsigP.getError());
+    htotalSig->SetBinContent(ibin+1, _work->var("nSigP")->getVal() + _work->var("nSigF")->getVal());
+    htotalSig->SetBinError(ibin+1, _work->var("nSigP")->getError() + _work->var("nSigF")->getError());
+    hPtotalSig->SetBinContent(ibin+1, _work->var("nSigP")->getVal());
+    hPtotalSig->SetBinError(ibin+1, _work->var("nSigP")->getError());
 
     TCanvas *c1 = new TCanvas("c1","c1",2000,900);
     c1->Divide(2,1,0.001,0.001);
@@ -332,28 +384,29 @@ void pureHLTTnP()
     gPad->SetTickx(1);
     gPad->SetBottomMargin(0.12);
     gPad->SetRightMargin(0.05);
-    frameP->GetYaxis()->SetTitleOffset(yTitleOffset);
-    frameP->GetYaxis()->SetTitleSize(yTitleSize);
-    frameP->GetYaxis()->SetLabelSize(yLabelSize);
-    frameP->GetYaxis()->SetDecimals(2);
-    frameP->GetXaxis()->SetTitleOffset(xTitleOffset);
-    frameP->GetXaxis()->SetLabelSize(xLabelSize);
-    frameP->GetXaxis()->SetTitleSize(xTitleSize);
-    frameP->SetMarkerStyle(20);
+    pPass->SetMaximum(1.2*passHist->GetMaximum());
+    pPass->GetYaxis()->SetTitleOffset(yTitleOffset);
+    pPass->GetYaxis()->SetTitleSize(yTitleSize);
+    pPass->GetYaxis()->SetLabelSize(yLabelSize);
+    pPass->GetYaxis()->SetDecimals(2);
+    pPass->GetXaxis()->SetTitleOffset(xTitleOffset);
+    pPass->GetXaxis()->SetLabelSize(xLabelSize);
+    pPass->GetXaxis()->SetTitleSize(xTitleSize);
+    pPass->SetMarkerStyle(20);
     //passHist->SetMinimum(0.5);
     //passHist->SetMaximum(1.01);
-    frameP->SetMarkerColor(kRed);
-    frameP->SetLineColor(kRed);
-    frameP->Draw("pe");
+    pPass->SetMarkerColor(kRed);
+    pPass->SetLineColor(kRed);
+    pPass->Draw("pe");
 
-    TLatex passFitInfo;
-    passFitInfo.SetNDC();                                                                                  
-    passFitInfo.SetTextFont(42);                                                                           
-    passFitInfo.SetTextSize(0.03);  
-    
-    TString chiPass;                                                                                     
-    chiPass.Form("chi^{2}/NDF = %.3f", chi2P);  
-    passFitInfo.DrawLatex(0.65,0.85, chiPass);
+    //TLatex passFitInfo;
+    //passFitInfo.SetNDC();                                                                                  
+    //passFitInfo.SetTextFont(42);                                                                           
+    //passFitInfo.SetTextSize(0.03);  
+    //
+    //TString chiPass;                                                                                     
+    //chiPass.Form("chi^{2}/NDF = %.3f", chi2P);  
+    //passFitInfo.DrawLatex(0.65,0.85, chiPass);
 
     TLegend* leg = new TLegend(0.25, 0.20, 0.5, 0.4,"","brNDC");
     leg->SetTextSize(0.05);
@@ -366,28 +419,29 @@ void pureHLTTnP()
     gPad->SetTickx(1);
     gPad->SetBottomMargin(0.12);
     gPad->SetRightMargin(0.05);
-    frameF->GetYaxis()->SetTitleOffset(yTitleOffset);
-    frameF->GetYaxis()->SetTitleSize(yTitleSize);
-    frameF->GetYaxis()->SetLabelSize(yLabelSize);
-    frameF->GetYaxis()->SetDecimals(2);
-    frameF->GetXaxis()->SetTitleOffset(xTitleOffset);
-    frameF->GetXaxis()->SetLabelSize(xLabelSize);
-    frameF->GetXaxis()->SetTitleSize(xTitleSize);
-    frameF->SetMarkerStyle(20);
+    pFail->SetMaximum(1.2*failHist->GetMaximum());
+    pFail->GetYaxis()->SetTitleOffset(yTitleOffset);
+    pFail->GetYaxis()->SetTitleSize(yTitleSize);
+    pFail->GetYaxis()->SetLabelSize(yLabelSize);
+    pFail->GetYaxis()->SetDecimals(2);
+    pFail->GetXaxis()->SetTitleOffset(xTitleOffset);
+    pFail->GetXaxis()->SetLabelSize(xLabelSize);
+    pFail->GetXaxis()->SetTitleSize(xTitleSize);
+    pFail->SetMarkerStyle(20);
     //passHist->SetMinimum(0.5);
     //passHist->SetMaximum(1.01);
-    frameF->SetMarkerColor(kRed);
-    frameF->SetLineColor(kRed);
-    frameF->Draw("pe");
+    pFail->SetMarkerColor(kRed);
+    pFail->SetLineColor(kRed);
+    pFail->Draw("pe");
 
-    TLatex failFitInfo;
-    failFitInfo.SetNDC();
-    failFitInfo.SetTextFont(42);
-    failFitInfo.SetTextSize(0.03);
+    //TLatex failFitInfo;
+    //failFitInfo.SetNDC();
+    //failFitInfo.SetTextFont(42);
+    //failFitInfo.SetTextSize(0.03);
 
-    TString chiFail;
-    chiFail.Form("chi^{2}/NDF = %.3f", chi2F);
-    failFitInfo.DrawLatex(0.65,0.85, chiFail);
+    //TString chiFail;
+    //chiFail.Form("chi^{2}/NDF = %.3f", chi2F);
+    //failFitInfo.DrawLatex(0.65,0.85, chiFail);
 
     c1->SaveAs("pass_fail_" + etbinNames.at(ibin) + ".png");
     delete passHist;
