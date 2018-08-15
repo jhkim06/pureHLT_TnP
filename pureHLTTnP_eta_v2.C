@@ -149,40 +149,38 @@ void pureHLTTnP()
  TFile* infile1 = NULL;
  //TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/CMSSW_10_1_5/ntuple/ntuple_CMSSW_10_1_5_BadPixModuleFix.root";
  //TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/CMSSW_10_1_2_patch2/ntuple/ntuple_CMSSW_10_1_2_patch.root";
- TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/TnPsamples/2018Av1/2018Av1.root";
- //TString filename1 = "./output_ntup_100.root";
+ TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/TnPsamples/2018Bv1/2018Bv1.root";
  infile1 = new TFile(filename1);
 
  TTree *tree=0;
  tree = (TTree*)infile1->Get("hltTPTree");
 
- //double phiBins[] = {-3.15, -2.4, -1.8, -1.2, -0.6, 0., 0.6, 1.2, 1.8, 2.4, 3.15};  
- double phiBins[] = {-3.15, -2.4, -1.8, -1.2, -1.0, -0.8, -0.6, -0.4, -0.2, 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.8, 2.4, 3.15};  
- const int NphiBins = sizeof(phiBins)/sizeof(double); 
+ double etaBins[] = {-2.5,-2.2,-1.566,-1.4442, -1.0, -0.6,-0.3,-0.1, 0.1, 0.3,0.6,1.0, 1.4442, 1.566, 2.2, 2.5};  
+ const int NetaBins = sizeof(etaBins)/sizeof(double); 
 
  vector<TString> etbinNames;
- for( int i = 0; i < NphiBins-1; i++){
+ for( int i = 0; i < NetaBins-1; i++){
       TString lowerBound, upperBound;
-      lowerBound.Form("%f", phiBins[i]);
-      upperBound.Form("%f", phiBins[i+1]);
-      etbinNames.push_back("phi"+lowerBound+"phi"+upperBound);
-      cout << "check bin names: " << "phi"+lowerBound+"phi"+upperBound <<  endl;
+      lowerBound.Form("%f", etaBins[i]);
+      upperBound.Form("%f", etaBins[i+1]);
+      etbinNames.push_back("eta"+lowerBound+"eta"+upperBound);
+      cout << "check bin names: " << "eta"+lowerBound+"eta"+upperBound <<  endl;
  }
 
- TH1D* htotalSig = new TH1D("htotalSig","htotalSig", NphiBins-1, phiBins);
- TH1D* hPtotalSig = new TH1D("hPtotalSig","hPtotalSig", NphiBins-1, phiBins);
+ TH1D* htotalSig = new TH1D("htotalSig","htotalSig", NetaBins-1, etaBins);
+ TH1D* hPtotalSig = new TH1D("hPtotalSig","hPtotalSig", NetaBins-1, etaBins);
 
- for( int ibin = 0; ibin < NphiBins-1; ibin++){
+ for( int ibin = 0; ibin < NetaBins-1; ibin++){
 
     //if(ibin != 1) continue;
     TString lowerBound, upperBound;
-    lowerBound.Form("%f", phiBins[ibin]);
-    upperBound.Form("%f", phiBins[ibin+1]);
+    lowerBound.Form("%f", etaBins[ibin]);
+    upperBound.Form("%f", etaBins[ibin+1]);
 
     // for pixel matching filter
     TString var = "mass";
-    //TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.eta > 0 && probeHLTRegion==1 && probeHLT.et > 30 && (evtTrigs[0]&0x4000000)!=0 && (tagTrigs[2]&0x400000)!=0 &&  (probeTrigs[2]&0x8000)!=0";
-    TString sampleCuts = " tagHLTRegion==0 && mass>50 && mass<130 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.et > 50  && (tagTrigs[2]&0x800)!=0 &&  (probeTrigs[2]&0x10)!=0 && probeHLTRegion==0 && evt.runnr < 315402";
+    //TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.eta > " + lowerBound + "&& probeHLT.eta < " + upperBound + " && probeHLT.eta > 0 && probeHLTRegion==1 && probeHLT.et > 30 && (evtTrigs[0]&0x4000000)!=0 && (tagTrigs[2]&0x400000)!=0 &&  (probeTrigs[2]&0x8000)!=0";
+    TString sampleCuts = " tagHLTRegion==0 && mass>50 && mass<130 && probeHLT.eta > " + lowerBound + "&& probeHLT.eta < " + upperBound + " && probeHLT.et > 50  && (tagTrigs[2]&0x800)!=0 &&  (probeTrigs[2]&0x10)!=0";
 
     cout << sampleCuts << endl;
 
@@ -274,7 +272,7 @@ void pureHLTTnP()
     _work->factory(TString::Format("ng1P[%f,0.5,%f]",nTotP*0.5,nTotP));
     _work->factory(TString::Format("ng2P[%f,0.5,%f]",nTotP*0.1,nTotP));
     _work->factory("SUM::gaussP(ng1P*g1P,ng2P*g2P)");
-    _work->factory("FCONV::sigPass(massP, bwP, sigResPass)"); // try later template fit: https://github.com/michelif/egm_tnp_analysis/blob/egm_tnp_Moriond18_v3.0/libPython/fitUtils.py#L117
+    _work->factory("FCONV::sigPass(massP, bwP, sigResPass)");
     _work->factory("RooCMSShape::bkgPass(massP, acmsP, betaP, gammaP, peakP)");
     _work->factory(TString::Format("nSigP[%f,0.5,%f]",nTotP*0.9,nTotP*1.5));
     _work->factory(TString::Format("nBkgP[%f,0.5,%f]",nTotP*0.1,nTotP*1.5));
@@ -433,7 +431,7 @@ void pureHLTTnP()
     chiFail.Form("chi^{2}/NDF = %.3f", chi2F);
     failFitInfo.DrawLatex(0.65,0.85, chiFail);
 
-    c1->SaveAs("pass_fail_" + etbinNames.at(ibin) + "_barrel.png");
+    c1->SaveAs("pass_fail_" + etbinNames.at(ibin) + ".png");
     delete passHist;
     delete failHist;
     delete c1;
@@ -459,7 +457,8 @@ void pureHLTTnP()
  gPad->SetBottomMargin(0.12);
  gPad->SetRightMargin(0.05);
  //eff->SetTitle("Run 315322, Eff. w.r.t. HCalIso filter");
- eff->SetTitle("Pixel match filter Eff. w.r.t. HCal Iso filter EB");
+ eff->SetTitle("Pixel match filter Eff. w.r.t. HCal Iso filter");
+ // 2018 Run B (2.7 fb^{-1}
  eff->GetYaxis()->SetTitleOffset(yTitleOffset);
  eff->GetYaxis()->SetTitleSize(yTitleSize);
  eff->GetYaxis()->SetLabelSize(yLabelSize);
@@ -467,8 +466,8 @@ void pureHLTTnP()
  eff->GetXaxis()->SetTitleOffset(xTitleOffset);
  eff->GetXaxis()->SetLabelSize(xLabelSize);
  eff->GetXaxis()->SetTitleSize(xTitleSize);
- eff->GetXaxis()->SetRangeUser(-3.15,3.15);
- eff->GetXaxis()->SetTitle("#phi_{HLT}");
+ eff->GetXaxis()->SetRangeUser(-2.5,2.5);
+ eff->GetXaxis()->SetTitle("#eta_{HLT}");
  eff->GetYaxis()->SetTitle("Efficiency");
  eff->SetMarkerStyle(20);
  eff->SetMinimum(0.5);
@@ -477,14 +476,15 @@ void pureHLTTnP()
  eff->SetLineColor(kRed);
  eff->Draw("ape");
 
- TLatex et_cut(1.7,0.8,"SC E_{T} > 50 GeV");
+ TLatex et_cut(1.4,0.8,"SC E_{T} > 50 GeV");
  et_cut.SetTextSize(0.035);
  et_cut.Draw();
 
- TLatex lumi(1.8, 1.02, "2.7 fb^{-1} (13 TeV)");
+ TLatex lumi(1.6, 1.02,"2.7 fb^{-1} (13 TeV)");
  lumi.SetTextSize(0.03);
  lumi.Draw();
 
- c1->SaveAs("eff_phi_barrel.png");
+
+ c1->SaveAs("eff_eta.png");
 
 }
