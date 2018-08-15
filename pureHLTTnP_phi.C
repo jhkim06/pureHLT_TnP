@@ -149,7 +149,7 @@ void pureHLTTnP()
  TFile* infile1 = NULL;
  //TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/CMSSW_10_1_5/ntuple/ntuple_CMSSW_10_1_5_BadPixModuleFix.root";
  //TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/CMSSW_10_1_2_patch2/ntuple/ntuple_CMSSW_10_1_2_patch.root";
- TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/TnPsamples/2018Av1/2018Av1.root";
+ TString filename1 = "/Volumes/Samsung_T3/2018_HLT_Performances/PixelMatchStudy/TnPsamples/2018Av3/2018Av3.root";
  //TString filename1 = "./output_ntup_100.root";
  infile1 = new TFile(filename1);
 
@@ -182,7 +182,7 @@ void pureHLTTnP()
     // for pixel matching filter
     TString var = "mass";
     //TString sampleCuts = " tagHLTRegion==0 && mass>60 && mass<120 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.eta > 0 && probeHLTRegion==1 && probeHLT.et > 30 && (evtTrigs[0]&0x4000000)!=0 && (tagTrigs[2]&0x400000)!=0 &&  (probeTrigs[2]&0x8000)!=0";
-    TString sampleCuts = " tagHLTRegion==0 && mass>50 && mass<130 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.et > 50  && (tagTrigs[2]&0x800)!=0 &&  (probeTrigs[2]&0x10)!=0 && probeHLTRegion==0 && evt.runnr < 315402";
+    TString sampleCuts = " tagHLTRegion==0 && mass>50 && mass<130 && probeHLT.phi > " + lowerBound + "&& probeHLT.phi < " + upperBound + " && probeHLT.et > 50  && (tagTrigs[2]&0x800)!=0 &&  (probeTrigs[2]&0x10)!=0 && probeHLTRegion==0";
 
     cout << sampleCuts << endl;
 
